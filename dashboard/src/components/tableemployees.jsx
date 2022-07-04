@@ -1,4 +1,4 @@
-import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons'
+import { DeleteIcon, EditIcon, Icon } from '@chakra-ui/icons'
 import {
   useColorMode,
   TableContainer,
@@ -10,27 +10,22 @@ import {
   Th,
   Checkbox,
   Stack,
-  Box,
   Divider,
   Button,
+  useRadio,
+  useToast,
   ButtonGroup,
 } from '@chakra-ui/react'
-import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
-import { useState } from 'react'
-import { useAuth } from '../context/auth.context'
-import useEmployees from '../hooks/useEmployee'
-import RowTable from './rowtable'
+import { useEmployee } from '../context/emp.context'
+import CreateMenu from './crud/create'
+import EditMenu from './crud/edit'
 
 const TableEmployees = () => {
-  const [currentPage, setCurrentPage] = useState(1)
-  const [employeesPerPage, setEmployeesPerPage] = useState(10)
-  const { token } = useAuth()
   const { colorMode } = useColorMode()
-  const { employees } = useEmployees(token)
-  const [edit, setEdit] = useState(false)
+  const { employees, delEmployee } = useEmployee()
 
-  const onToggle = (id) => {
-    setEdit(!edit)
+  const handleDelete = (id) => {
+    delEmployee(id)
   }
 
   return (
@@ -39,28 +34,16 @@ const TableEmployees = () => {
         border="1px"
         borderRadius={8}
         borderColor={colorMode === 'light' ? '#C5CFDC' : '#ffffff29'}
+        mt={8}
       >
-        <Stack
-          direction='row'
-          spacing={1}
-          justify="end"
-          align="center"
-          p={1}
-        >
-          {
-            !edit &&
-            (
-              < Button colorScheme="red" size="sm" leftIcon={<DeleteIcon />} variant="ghost"> Eliminar</Button>
-            )
-          }
-          <Button colorScheme="teal" size="sm" leftIcon={<EditIcon />} variant="ghost"> Editar</Button>
-          <Button colorScheme="blue" size="sm" leftIcon={<AddIcon />} variant="ghost"> Crear</Button>
-        </Stack>
+        <CreateMenu />
         <Divider />
         <Table>
           <Thead >
             <Tr>
-              <Th></Th>
+              <Th pr={1}>
+                Acciones
+              </Th>
               <Th>Empleado</Th>
               <Th>Departamento</Th>
               <Th>Salario</Th>
@@ -69,36 +52,31 @@ const TableEmployees = () => {
             </Tr>
           </Thead>
           <Tbody>
-            {employees.map((e, index) => (
+            {employees.map((emp, index) => (
               <Tr key={index}>
-                <RowTable
-                  isDisable={edit}
-                  emp={e}
-                />
+                <Td pr={1}>
+                  <ButtonGroup isAttached variant='outline'>
+                    <Button
+                      colorScheme="red"
+                      size="sm"
+                      onClick={() => handleDelete(emp.id)}
+                    >
+                      <Icon as={DeleteIcon} />
+                    </Button>
+                    <EditMenu emp={emp} />
+                  </ButtonGroup>
+                </Td>
+                <Td >{emp.first_name + " " + emp.last_name}</Td>
+                <Td>{emp.dept_name}</Td>
+                <Td>{emp.salary}</Td>
+                <Td>{emp.gender}</Td>
+                <Td>{emp.hire_date}</Td>
               </Tr>
             ))}
           </Tbody>
         </Table>
       </TableContainer >
     </>
-  )
-
-}
-
-
-const Pagination = ({ perPage, total }) => {
-  const pageNumbers = []
-  for (let i = 1; i <= Math.ceil(total / perPage); i++) {
-    pageNumbers.push(i)
-  }
-  return (
-    <Tabs>
-      <TabList>
-        {pageNumbers.map(e => (
-          <Tab key={e}>{e}</Tab>
-        ))}
-      </TabList>
-    </Tabs>
   )
 }
 

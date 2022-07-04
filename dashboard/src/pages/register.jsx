@@ -9,15 +9,16 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/auth.context"
 
-const Login = () => {
+const Register = () => {
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const { loginUser } = useAuth()
+  const { registerUser } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    loginUser({ email, password })
+    registerUser({ name, email, password })
     navigate('/', { replace: true })
   }
 
@@ -27,7 +28,16 @@ const Login = () => {
       p={8}
       as="form" onSubmit={handleSubmit}
     >
-      <Heading mb={6}>Log In</Heading>
+      <Heading mb={6}>Register</Heading>
+      <FormControl isRequired>
+        <Input
+          type='text'
+          value={name}
+          placeholder="Example"
+          onChange={(e) => setName(e.target.value)}
+          mb={6}
+        />
+      </FormControl>
       <FormControl isRequired>
         <Input
           type='email'
@@ -48,10 +58,10 @@ const Login = () => {
         />
       </FormControl>
       <Button type="submit" colorScheme="teal" mb={6}>
-        Log In
+        sign up
       </Button>
     </Flex>
   )
 }
 
-export default Login
+export default Register
