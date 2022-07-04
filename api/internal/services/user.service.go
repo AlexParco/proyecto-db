@@ -12,6 +12,7 @@ import (
 type UserService interface {
 	CreateUser(user *models.User) (*models.User, error)
 	UpdateUser(user *models.User) error
+	DeleteUser(id string) error
 	FindUserByEmail(email string) (*models.User, error)
 	FindUserById(id string) (*models.User, error)
 }
@@ -53,11 +54,13 @@ func (u *userService) UpdateUser(user *models.User) error {
 		if err != nil {
 			return err
 		}
+		if user.Email == "" {
+			user.Email = tempUser.Email
+		}
 		user.Password = tempUser.Password
 		user.CreatedAt = tempUser.CreatedAt
 		user.Admin = tempUser.Admin
 	}
-
 	err := u.userRepo.UpdateUser(user)
 	if err != nil {
 		return err
@@ -84,6 +87,20 @@ func (u *userService) FindUserById(id string) (*models.User, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+func (u *userService) DeleteUser(id string) error {
+	hId, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		return err
+	}
+
+	if err := u.userRepo.Delete(hId); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func encryptPassword(pwd []byte) string {

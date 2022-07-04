@@ -39,10 +39,11 @@ func NewApp(c config.ApiConfig) *App {
 func (a *App) Run(r *mux.Router) {
 	headersOk := handlers.AllowedHeaders([]string{"Authorization", "Content-Type", "X-Requested-With"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
+	methodsOK := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE"})
 
 	port := a.Config.Port
 	addr := fmt.Sprintf(":%v", port)
 
 	fmt.Printf("API is running in port: %s\n", port)
-	log.Fatal(http.ListenAndServe(addr, handlers.CORS(originsOk, headersOk)(r)))
+	log.Fatal(http.ListenAndServe(addr, handlers.CORS(originsOk, headersOk, methodsOK)(r)))
 }

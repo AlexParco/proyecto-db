@@ -7,7 +7,7 @@ type Employee struct {
 	DeptName  string    `json:"dept_name"`
 	FirstName string    `json:"first_name"`
 	LastName  string    `json:"last_name"`
-	Salary    int       `json:"salary"`
+	Salary    float64   `json:"salary"`
 	Gender    string    `json:"gender"`
 	HireDate  string    `json:"hire_date"`
 	UpdateAt  time.Time `json:"update_at"`

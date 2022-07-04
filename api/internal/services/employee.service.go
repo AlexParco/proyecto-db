@@ -12,7 +12,7 @@ type EmployeeService interface {
 	CreateEmployee(employee *models.Employee) (*models.Employee, error)
 	GetAll() ([]*models.Employee, error)
 	FindEmployeeById(id string) (*models.Employee, error)
-	UpdateEmployee(user *models.Employee) error
+	UpdateEmployee(employee *models.Employee) error
 	DeleteEmployee(id string) error
 }
 
@@ -53,7 +53,11 @@ func (e *employeeService) FindEmployeeById(id string) (*models.Employee, error) 
 	return employee, nil
 }
 
-func (e *employeeService) UpdateEmployee(user *models.Employee) error {
+func (e *employeeService) UpdateEmployee(employee *models.Employee) error {
+	err := e.empRepo.UpdateEmployee(*employee)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

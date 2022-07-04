@@ -27,7 +27,7 @@ func NewMongoDB(c config.MongoConfig) (*MongoDB, error) {
 		return nil, err
 	}
 
-	err = client.Ping(context.Background(), readpref.Primary())
+	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
 		return nil, err
 	}

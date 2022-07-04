@@ -1,7 +1,6 @@
 package services
 
 import (
-	"log"
 	"strings"
 	"time"
 
@@ -36,14 +35,13 @@ func (j *jwtService) GenerateToken(HexUserId primitive.ObjectID) (string, error)
 	customClaims := JwtClaims{
 		UserID,
 		jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
 		},
 	}
 
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, customClaims)
 	token, err := t.SignedString([]byte(j.secretKey))
 	if err != nil {
-		log.Println(err.Error())
 		return "", err
 	}
 

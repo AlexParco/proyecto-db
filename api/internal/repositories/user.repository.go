@@ -14,6 +14,7 @@ type UserRepository interface {
 	FindByEmail(email string) (*models.User, error)
 	FindById(id primitive.ObjectID) (*models.User, error)
 	UpdateUser(user *models.User) error
+	Delete(id primitive.ObjectID) error
 }
 
 type userRepository struct {
@@ -67,6 +68,14 @@ func (u *userRepository) UpdateUser(user *models.User) error {
 	update := bson.D{primitive.E{Key: "$set", Value: user}}
 	_, err := coll.UpdateByID(u.ctx, user.Id, update)
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *userRepository) Delete(id primitive.ObjectID) error {
+	coll := u.conn.Database("users").Collection("user")
+	if _, err := coll.DeleteOne(u.ctx, bson.M{"_id": id}); err != nil {
 		return err
 	}
 	return nil

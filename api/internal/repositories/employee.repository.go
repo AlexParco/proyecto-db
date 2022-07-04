@@ -12,7 +12,6 @@ type EmployeeRepository interface {
 	UpdateEmployee(employee models.Employee) error
 	DeleteEmployee(id string) error
 }
-
 type employeeRepository struct {
 	conn *database.MySQLDB
 }
@@ -69,6 +68,17 @@ func (e *employeeRepository) FindById(id string) (*models.Employee, error) {
 }
 
 func (e *employeeRepository) UpdateEmployee(employee models.Employee) error {
+	stmt, err := e.conn.Prepare("CALL UpdateEmployee(?,?,?,?,?,?,?)")
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+	_, err = stmt.Exec(employee.Id, employee.DeptName, employee.FirstName, employee.LastName, employee.Salary, employee.Gender, employee.HireDate)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

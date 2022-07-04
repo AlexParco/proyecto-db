@@ -47,6 +47,7 @@ func NewRouter(a *app.App) *mux.Router {
 	user.Use(middleware.AuthMiddleware)
 	user.HandleFunc("/profile", uc.Profile).Methods(http.MethodGet)
 	user.HandleFunc("/profile", uc.Update).Methods(http.MethodPut)
+	user.HandleFunc("/profile", uc.Delete).Methods(http.MethodDelete)
 
 	emp := api.PathPrefix("/v1/employee").Subrouter()
 	emp.Use(middleware.AuthMiddleware)
@@ -54,6 +55,7 @@ func NewRouter(a *app.App) *mux.Router {
 	emp.HandleFunc("", ec.CreateEmployee).Methods(http.MethodPost)
 	emp.HandleFunc("/{empid}", ec.FindEmployeeByID).Methods(http.MethodGet)
 	emp.HandleFunc("/{empid}", ec.DeleteEmployee).Methods(http.MethodDelete)
+	emp.HandleFunc("/{empid}", ec.UpdateEmployee).Methods(http.MethodPut)
 
 	return r
 }

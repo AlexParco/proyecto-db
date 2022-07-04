@@ -13,6 +13,7 @@ import (
 type UserController interface {
 	Profile(w http.ResponseWriter, r *http.Request)
 	Update(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
 }
 
 type userController struct {
@@ -24,56 +25,34 @@ func NewUserController(us services.UserService, jwts services.JwtService) UserCo
 	return &userController{us, jwts}
 }
 
-func (u *userController) getUserIdByHeader(w http.ResponseWriter, r *http.Request) string {
-	tokenstring := r.Header.Get("Authorization")
-
-	validateToken := u.jwtService.ValidateToken(tokenstring)
-	if validateToken == nil {
-		return ""
-	}
-
-	Claims := validateToken.Claims.(jwt.MapClaims)
-	return Claims["user_id"].(string)
-}
-
 func (u *userController) Profile(w http.ResponseWriter, r *http.Request) {
+
 	token := r.Header.Get("Authorization")
 	validateToken := u.jwtService.ValidateToken(token)
 	if validateToken == nil {
+		http.Error(w, "error: invalid token ", http.StatusBadRequest)
 		return
 	}
-
 	claims := validateToken.Claims.(jwt.MapClaims)
 	id := claims["user_id"].(string)
 
 	user, err := u.userService.FindUserById(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Error getting user", http.StatusBadRequest)
 		return
 	}
 
 	b, err := json.Marshal(struct {
-		User struct {
-			ID    primitive.ObjectID `json:"id"`
-			Name  string             `json:"name"`
-			Email string             `json:"email"`
-		} `json:"user"`
-		Token string `json:"token,omitempty"`
+		ID    primitive.ObjectID `json:"id"`
+		Name  string             `json:"name"`
+		Email string             `json:"email"`
 	}{
-		User: struct {
-			ID    primitive.ObjectID `json:"id"`
-			Name  string             `json:"name"`
-			Email string             `json:"email"`
-		}{
-			user.Id,
-			user.Name,
-			user.Email,
-		},
-		Token: token,
+		ID:    user.Id,
+		Name:  user.Name,
+		Email: user.Email,
 	})
-
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error converting to response", http.StatusInternalServerError)
 		return
 	}
 
@@ -82,6 +61,15 @@ func (u *userController) Profile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *userController) Update(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("Authorization")
+	validateToken := u.jwtService.ValidateToken(token)
+	if validateToken == nil {
+		http.Error(w, "error: invalid token ", http.StatusBadRequest)
+		return
+	}
+	claims := validateToken.Claims.(jwt.MapClaims)
+	id := claims["user_id"].(string)
+
 	var user models.User
 
 	defer r.Body.Close()
@@ -90,24 +78,51 @@ func (u *userController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	UserId := u.getUserIdByHeader(w, r)
-	if UserId == "" {
-		http.Error(w, "Failed to validate token", http.StatusForbidden)
+	hId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		http.Error(w, "Error converting id", http.StatusInternalServerError)
 		return
 	}
 
-	id, err := primitive.ObjectIDFromHex(UserId)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	user.Id = hId
+	if err := u.userService.UpdateUser(&user); err != nil {
+		http.Error(w, "Error converting id", http.StatusBadRequest)
 		return
 	}
 
-	user.Id = id
-	err = u.userService.UpdateUser(&user)
+	b, err := json.Marshal(struct {
+		ID    string `json:"id,omitempty"`
+		Name  string `json:"name,omitempty"`
+		Email string `json:"email,omitempty"`
+	}{
+		ID:    id,
+		Name:  user.Name,
+		Email: user.Email,
+	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		http.Error(w, "Error converting to response", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusAccepted)
+	w.Write(b)
+}
+
+func (u *userController) Delete(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("Authorization")
+	validateToken := u.jwtService.ValidateToken(token)
+	if validateToken == nil {
+		http.Error(w, "error: invalid token ", http.StatusBadRequest)
+		return
+	}
+
+	claims := validateToken.Claims.(jwt.MapClaims)
+	id := claims["user_id"].(string)
+
+	if err := u.userService.DeleteUser(id); err != nil {
+		http.Error(w, "Error deleting user", http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
